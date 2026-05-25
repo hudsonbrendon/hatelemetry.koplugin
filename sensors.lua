@@ -40,7 +40,7 @@ function Sensors.build(snapshot, opts)
     }
 
     -- Value sensors: emitted only when present
-    local function num_sensor(name, value, attributes)
+    local function value_sensor(name, value, attributes)
         if value == nil then return end
         out[#out + 1] = {
             entity_id = entity("sensor", name),
@@ -49,36 +49,36 @@ function Sensors.build(snapshot, opts)
         }
     end
 
-    num_sensor("battery", snapshot.battery_level, {
+    value_sensor("battery", snapshot.battery_level, {
         friendly_name = "KOReader Battery", device_class = "battery",
         unit_of_measurement = "%", state_class = "measurement" })
-    num_sensor("frontlight", snapshot.frontlight, {
+    value_sensor("frontlight", snapshot.frontlight, {
         friendly_name = "KOReader Frontlight", icon = "mdi:brightness-6",
         unit_of_measurement = "%", state_class = "measurement" })
-    num_sensor("book_title", snapshot.book_title, {
+    value_sensor("book_title", snapshot.book_title, {
         friendly_name = "KOReader Book Title", icon = "mdi:book" })
-    num_sensor("book_author", snapshot.book_author, {
+    value_sensor("book_author", snapshot.book_author, {
         friendly_name = "KOReader Book Author", icon = "mdi:account-edit" })
-    num_sensor("progress", snapshot.progress_percent, {
+    value_sensor("progress", snapshot.progress_percent, {
         friendly_name = "KOReader Progress", icon = "mdi:percent",
         unit_of_measurement = "%", state_class = "measurement" })
-    num_sensor("current_page", snapshot.current_page, {
+    value_sensor("current_page", snapshot.current_page, {
         friendly_name = "KOReader Current Page", icon = "mdi:book-open-page-variant",
         state_class = "measurement" })
-    num_sensor("total_pages", snapshot.total_pages, {
+    value_sensor("total_pages", snapshot.total_pages, {
         friendly_name = "KOReader Total Pages", icon = "mdi:book-open-page-variant" })
-    num_sensor("chapter", snapshot.chapter, {
+    value_sensor("chapter", snapshot.chapter, {
         friendly_name = "KOReader Chapter", icon = "mdi:format-list-bulleted" })
-    num_sensor("reading_time_today", snapshot.reading_time_today_min, {
+    value_sensor("reading_time_today", snapshot.reading_time_today_min, {
         friendly_name = "KOReader Reading Time Today", device_class = "duration",
         unit_of_measurement = "min", state_class = "total_increasing" })
-    num_sensor("pages_today", snapshot.pages_read_today, {
+    value_sensor("pages_today", snapshot.pages_read_today, {
         friendly_name = "KOReader Pages Read Today", icon = "mdi:counter",
         state_class = "total_increasing" })
-    num_sensor("session_time", snapshot.session_time_min, {
+    value_sensor("session_time", snapshot.session_time_min, {
         friendly_name = "KOReader Session Time", device_class = "duration",
         unit_of_measurement = "min", state_class = "measurement" })
-    num_sensor("reading_speed", snapshot.reading_speed_pph, {
+    value_sensor("reading_speed", snapshot.reading_speed_pph, {
         friendly_name = "KOReader Reading Speed", icon = "mdi:speedometer",
         unit_of_measurement = "pages/h", state_class = "measurement" })
 

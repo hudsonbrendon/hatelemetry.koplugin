@@ -98,9 +98,14 @@ function HATelemetry:push(reading)
     local entities = Sensors.build(snap, { prefix = self.settings.entity_prefix })
 
     for _, entity in ipairs(entities) do
-        local ok_post, err = HAClient.post(ha_config, entity)
+        local ok_post, err, kind = HAClient.post(ha_config, entity)
         if not ok_post then
             logger.info("[HATelemetry]: push failed for", entity.entity_id, "-", err)
+            if kind == "connection" then
+                -- HA unreachable / network dropped: stop early instead of
+                -- blocking the UI thread on N sequential request timeouts.
+                break
+            end
         end
     end
 end
