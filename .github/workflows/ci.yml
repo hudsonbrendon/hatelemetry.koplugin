@@ -1,0 +1,26 @@
+name: CI
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+    branches: [main]
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      # KOReader runs LuaJIT (5.1-compatible); test against 5.1 to catch incompatibilities.
+      - uses: leafo/gh-actions-lua@v10
+        with:
+          luaVersion: "5.1"
+
+      - uses: leafo/gh-actions-luarocks@v4
+
+      - name: Install busted
+        run: luarocks install busted
+
+      - name: Run tests
+        run: busted

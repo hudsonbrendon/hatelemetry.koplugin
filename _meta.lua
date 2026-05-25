@@ -1,6 +1,6 @@
 return {
     name = "hatelemetry",
     fullname = "HA Telemetry",
-    description = "Pushes KOReader reading and device telemetry to Home Assistant via its REST API.",
-    version = "v0.1.0",
+    description = "Pushes KOReader reading and device telemetry to Home Assistant (webhook or REST) and applies control commands sent back from Home Assistant.",
+    version = "v0.3.0",
 }
