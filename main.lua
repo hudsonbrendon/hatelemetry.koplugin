@@ -144,4 +144,160 @@ function HATelemetry:onResume()
     end
 end
 
+function HATelemetry:addToMainMenu(menu_items)
+    local sub = {}
+
+    table.insert(sub, {
+        text = "Send telemetry on sleep/wake & open/close",
+        checked_func = function() return self.settings.enabled end,
+        callback = function()
+            self.settings.enabled = not self.settings.enabled
+            if not self.settings.enabled and self.settings.loop_enabled then
+                self.settings.loop_enabled = false
+                UIManager:unschedule(self.pushLoop)
+            end
+            self:saveSettings()
+            self:push(self.settings.enabled and true or false)
+        end,
+    })
+
+    table.insert(sub, {
+        text = "Periodic updates while awake",
+        separator = true,
+        enabled_func = function() return self.settings.enabled end,
+        checked_func = function() return self.settings.loop_enabled end,
+        callback = function()
+            self.settings.loop_enabled = not self.settings.loop_enabled
+            self:saveSettings()
+            if self.settings.loop_enabled then
+                self:pushLoop(true)
+            else
+                UIManager:unschedule(self.pushLoop)
+            end
+        end,
+    })
+
+    table.insert(sub, {
+        text_func = function()
+            return string.format("Entity prefix: '%s'", self.settings.entity_prefix)
+        end,
+        keep_menu_open = true,
+        callback = function(touchmenu_instance)
+            local dialog
+            dialog = InputDialog:new{
+                title = "Set entity prefix",
+                input = self.settings.entity_prefix,
+                input_type = "string",
+                buttons = {{
+                    { text = _("Cancel"), id = "close",
+                      callback = function() UIManager:close(dialog) end },
+                    { text = _("Set"), is_enter_default = true,
+                      callback = function()
+                          local v = dialog:getInputText()
+                          if v and v ~= "" then
+                              local clean = v:lower():gsub("[%s%-]+", "_")
+                                  :gsub("[^%w_]", ""):gsub("^_+", ""):gsub("_+$", "")
+                              if clean ~= "" then
+                                  self.settings.entity_prefix = clean
+                                  self:saveSettings()
+                                  if self.settings.enabled then self:push(true) end
+                                  touchmenu_instance:updateItems()
+                              end
+                          end
+                          UIManager:close(dialog)
+                      end },
+                }},
+            }
+            UIManager:show(dialog)
+            dialog:onShowKeyboard()
+        end,
+    })
+
+    table.insert(sub, {
+        text_func = function()
+            return string.format("Update interval (s): %d", self.settings.interval)
+        end,
+        separator = true,
+        keep_menu_open = true,
+        callback = function(touchmenu_instance)
+            local dialog
+            dialog = InputDialog:new{
+                title = "Set update interval (seconds)",
+                input = tostring(self.settings.interval),
+                input_type = "number",
+                buttons = {{
+                    { text = _("Cancel"), id = "close",
+                      callback = function() UIManager:close(dialog) end },
+                    { text = _("Set"), is_enter_default = true,
+                      callback = function()
+                          local v = tonumber(dialog:getInputText())
+                          if v and v > 0 then
+                              self.settings.interval = v
+                              self:saveSettings()
+                              if self.settings.loop_enabled then
+                                  UIManager:unschedule(self.pushLoop)
+                                  self:pushLoop(true)
+                              end
+                              touchmenu_instance:updateItems()
+                          end
+                          UIManager:close(dialog)
+                      end },
+                }},
+            }
+            UIManager:show(dialog)
+            dialog:onShowKeyboard()
+        end,
+    })
+
+    table.insert(sub, {
+        text = "Test connection",
+        keep_menu_open = true,
+        callback = function()
+            local ok_cfg, msg = HAClient.validate(ha_config)
+            if not ok_cfg then
+                UIManager:show(InfoMessage:new{ text = "Config error: " .. msg })
+                return
+            end
+            local ok_post, err = HAClient.post(ha_config, {
+                entity_id = "binary_sensor." .. self.settings.entity_prefix .. "_status",
+                state = "on",
+                attributes = {
+                    friendly_name = "KOReader Status",
+                    last_seen = os.date("!%Y-%m-%dT%H:%M:%SZ"),
+                },
+            })
+            if ok_post then
+                UIManager:show(InfoMessage:new{ text = "Success!" })
+            else
+                UIManager:show(InfoMessage:new{ text = "Failure:\n" .. tostring(err) })
+            end
+        end,
+    })
+
+    table.insert(sub, {
+        text = "Show current snapshot",
+        keep_menu_open = true,
+        callback = function()
+            local snap = self:collect()
+            local keys = {
+                "reading", "device_model", "battery_level", "is_charging", "frontlight",
+                "wifi_connected", "book_title", "book_author", "current_page", "total_pages",
+                "progress_percent", "chapter", "reading_time_today_min", "pages_read_today",
+                "session_time_min", "reading_speed_pph", "last_seen",
+            }
+            local lines = {}
+            for _, k in ipairs(keys) do
+                lines[#lines + 1] = string.format("%s: %s", k, tostring(snap[k]))
+            end
+            UIManager:show(InfoMessage:new{ text = table.concat(lines, "\n") })
+        end,
+    })
+
+    menu_items.hatelemetry = {
+        text = "\u{ECF5} HA Telemetry",
+        sorting_hint = "tools",
+        sub_item_table = sub,
+    }
+end
+
 return HATelemetry
