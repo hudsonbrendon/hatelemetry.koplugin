@@ -7,6 +7,8 @@ local function make_deps()
         powerd = {
             setIntensity = function(_, v) calls.frontlight = v end,
             turnOnFrontlight = function() calls.fl_on = true end,
+            turnOffFrontlight = function() calls.fl_off = true end,
+            setWarmth = function(_, v) calls.warmth = v end,
         },
         network = {
             turnOnWifi = function() calls.wifi = "on" end,
@@ -17,6 +19,9 @@ local function make_deps()
             calls.timeout = timeout
         end,
         request_sync = function() calls.sync = true end,
+        turn_page = function(rel) calls.turn_page = rel end,
+        goto_page = function(n) calls.goto_page = n end,
+        refresh = function() calls.refresh = true end,
     }
     return deps, calls
 end
@@ -62,5 +67,49 @@ describe("Commands.apply", function()
         }, deps)
         assert.are.equal(30, calls.frontlight)
         assert.is_true(calls.sync)
+    end)
+
+    it("set_warmth ajusta o warmth do frontlight", function()
+        local deps, calls = make_deps()
+        Commands.apply({ type = "set_warmth", value = 75 }, deps)
+        assert.are.equal(75, calls.warmth)
+    end)
+
+    it("set_frontlight_power true liga o frontlight", function()
+        local deps, calls = make_deps()
+        Commands.apply({ type = "set_frontlight_power", value = true }, deps)
+        assert.is_true(calls.fl_on)
+        assert.is_nil(calls.fl_off)
+    end)
+
+    it("set_frontlight_power false desliga o frontlight", function()
+        local deps, calls = make_deps()
+        Commands.apply({ type = "set_frontlight_power", value = false }, deps)
+        assert.is_true(calls.fl_off)
+        assert.is_nil(calls.fl_on)
+    end)
+
+    it("page_turn passa o valor relativo para turn_page", function()
+        local deps, calls = make_deps()
+        Commands.apply({ type = "page_turn", value = 1 }, deps)
+        assert.are.equal(1, calls.turn_page)
+    end)
+
+    it("page_turn com valor negativo volta pagina", function()
+        local deps, calls = make_deps()
+        Commands.apply({ type = "page_turn", value = -1 }, deps)
+        assert.are.equal(-1, calls.turn_page)
+    end)
+
+    it("goto_page navega para a pagina especificada", function()
+        local deps, calls = make_deps()
+        Commands.apply({ type = "goto_page", value = 42 }, deps)
+        assert.are.equal(42, calls.goto_page)
+    end)
+
+    it("refresh aciona o refresh de tela", function()
+        local deps, calls = make_deps()
+        Commands.apply({ type = "refresh" }, deps)
+        assert.is_true(calls.refresh)
     end)
 end)

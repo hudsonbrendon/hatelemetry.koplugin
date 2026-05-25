@@ -105,6 +105,57 @@ function Snapshot.collect(deps)
                 s.session_time_min = round(sess_sec / 60)
             end
         end
+
+        -- Páginas restantes
+        if cur and s.total_pages then
+            s.pages_left = s.total_pages - cur
+        end
+        if ui.toc and cur then
+            local ok_cl, left = pcall(function() return ui.toc:getChapterPagesLeft(cur) end)
+            if ok_cl and type(left) == "number" then s.pages_left_chapter = left end
+        end
+
+        -- Tempo estimado para terminar (a partir da velocidade de hoje)
+        if s.reading_speed_pph and s.reading_speed_pph > 0 then
+            if s.pages_left then
+                s.time_to_finish_book_min = round(s.pages_left / s.reading_speed_pph * 60)
+            end
+            if s.pages_left_chapter then
+                s.time_to_finish_chapter_min = round(s.pages_left_chapter / s.reading_speed_pph * 60)
+            end
+        end
+
+        -- Metadados do livro
+        if props.language and props.language ~= "" then s.book_language = props.language end
+        if props.series and props.series ~= "" then s.book_series = props.series end
+        if ui.document and ui.document.file then
+            local ext = ui.document.file:match("%.([^.\\/]+)$")
+            if ext then s.book_format = ext:upper() end
+        end
+
+        -- Tempo total de leitura no livro (resumo no sidecar)
+        if ui.doc_settings then
+            local ok_st, stats_tbl = pcall(function() return ui.doc_settings:readSetting("stats") end)
+            if ok_st and type(stats_tbl) == "table" and stats_tbl.total_time_in_sec then
+                s.total_time_min = round(stats_tbl.total_time_in_sec / 60)
+            end
+        end
+
+        -- Nº de anotações/destaques
+        if ui.annotation then
+            local ok_an, n = pcall(function() return ui.annotation:getNumberOfHighlightsAndNotes() end)
+            if ok_an and type(n) == "number" then s.annotations_count = n end
+        end
+    end
+
+    -- Frontlight on/off and warmth (outside has_doc, device-level)
+    if device:hasFrontlight() then
+        local ok_on, on = pcall(function() return powerd:isFrontlightOn() end)
+        if ok_on then s.frontlight_on = on and true or false end
+    end
+    if device:hasNaturalLight() then
+        local ok_w, w = pcall(function() return powerd:frontlightWarmth() end)
+        if ok_w and type(w) == "number" then s.warmth = w end
     end
 
     return s

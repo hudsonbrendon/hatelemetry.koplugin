@@ -38,6 +38,32 @@ function Commands.apply(cmd, deps)
         if deps.request_sync then
             pcall(deps.request_sync)
         end
+
+    elseif cmd.type == "set_warmth" then
+        local v = tonumber(cmd.value)
+        if v and deps.powerd and deps.powerd.setWarmth then
+            pcall(function() deps.powerd:setWarmth(v, true) end)
+        end
+
+    elseif cmd.type == "set_frontlight_power" then
+        if deps.powerd then
+            if cmd.value == true and deps.powerd.turnOnFrontlight then
+                pcall(function() deps.powerd:turnOnFrontlight() end)
+            elseif cmd.value == false and deps.powerd.turnOffFrontlight then
+                pcall(function() deps.powerd:turnOffFrontlight() end)
+            end
+        end
+
+    elseif cmd.type == "page_turn" then
+        local rel = tonumber(cmd.value)
+        if rel and deps.turn_page then pcall(deps.turn_page, rel) end
+
+    elseif cmd.type == "goto_page" then
+        local n = tonumber(cmd.value)
+        if n and deps.goto_page then pcall(deps.goto_page, n) end
+
+    elseif cmd.type == "refresh" then
+        if deps.refresh then pcall(deps.refresh) end
     end
 end
 

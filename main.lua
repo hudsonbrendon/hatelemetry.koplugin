@@ -3,6 +3,7 @@
 
 local _ = require("gettext")
 local UIManager = require("ui/uimanager")
+local Event = require("ui/event")
 local InputDialog = require("ui/widget/inputdialog")
 local InfoMessage = require("ui/widget/infomessage")
 local WidgetContainer = require("ui/widget/container/widgetcontainer")
@@ -100,6 +101,15 @@ function HATelemetry:commandDeps()
         request_sync = function()
             -- Reenvia a telemetria no próximo ciclo curto.
             UIManager:scheduleIn(1, self.push, self, true)
+        end,
+        turn_page = function(rel)
+            if self.ui then self.ui:handleEvent(Event:new("GotoViewRel", rel)) end
+        end,
+        goto_page = function(n)
+            if self.ui then self.ui:handleEvent(Event:new("GotoPage", n)) end
+        end,
+        refresh = function()
+            UIManager:setDirty("all", "full")
         end,
     }
 end
