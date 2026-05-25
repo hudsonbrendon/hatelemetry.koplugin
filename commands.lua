@@ -21,7 +21,7 @@ function Commands.apply(cmd, deps)
         end
 
     elseif cmd.type == "show_message" then
-        if deps.show_message and cmd.text then
+        if deps.show_message and cmd.text and cmd.text ~= "" then
             pcall(deps.show_message, tostring(cmd.text), cmd.timeout)
         end
 
