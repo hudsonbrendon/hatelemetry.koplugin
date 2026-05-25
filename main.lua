@@ -14,6 +14,8 @@ local logger = require("logger")
 local Snapshot = require("snapshot")
 local Sensors = require("sensors")
 local HAClient = require("ha_client")
+local HAWebhook = require("ha_webhook")
+local Commands = require("commands")
 
 -- Prefer a local debug config during development; fall back to ha_config.lua.
 local ok, ha_config = pcall(require, "ha_debug_config")
@@ -83,11 +85,30 @@ function HATelemetry:collect(reading_override)
     return snap
 end
 
---- Collect + push every sensor to Home Assistant.
+--- Constrói as dependências usadas para aplicar comandos no Kindle.
+function HATelemetry:commandDeps()
+    return {
+        powerd = powerd,
+        network = NetworkMgr,
+        show_message = function(text, timeout)
+            local msg = InfoMessage:new{ text = text }
+            UIManager:show(msg)
+            if tonumber(timeout) then
+                UIManager:scheduleIn(tonumber(timeout), function() UIManager:close(msg) end)
+            end
+        end,
+        request_sync = function()
+            -- Reenvia a telemetria no próximo ciclo curto.
+            UIManager:scheduleIn(1, self.push, self, true)
+        end,
+    }
+end
+
+--- Coleta o snapshot e envia ao Home Assistant (webhook nativo ou REST legado).
 function HATelemetry:push(reading)
     if not NetworkMgr:isConnected() then
         if not self._offline_logged then
-            logger.info("[HATelemetry]: no network, skipping push")
+            logger.info("[HATelemetry]: sem rede, pulando envio")
             self._offline_logged = true
         end
         return
@@ -95,15 +116,30 @@ function HATelemetry:push(reading)
     self._offline_logged = false
 
     local snap = self:collect(reading)
-    local entities = Sensors.build(snap, { prefix = self.settings.entity_prefix })
 
+    local use_webhook = ha_config.webhook_id ~= nil
+        and ha_config.webhook_id ~= ""
+        and ha_config.webhook_id ~= "ColeSeuWebhookIdAqui"
+
+    if use_webhook then
+        local ok_post, commands, err = HAWebhook.post(ha_config, snap)
+        if not ok_post then
+            logger.info("[HATelemetry]: webhook falhou -", err)
+            return
+        end
+        if commands and #commands > 0 then
+            Commands.apply_all(commands, self:commandDeps())
+        end
+        return
+    end
+
+    -- Modo legado: um POST por entidade em /api/states.
+    local entities = Sensors.build(snap, { prefix = self.settings.entity_prefix })
     for _, entity in ipairs(entities) do
         local ok_post, err, kind = HAClient.post(ha_config, entity)
         if not ok_post then
-            logger.info("[HATelemetry]: push failed for", entity.entity_id, "-", err)
+            logger.info("[HATelemetry]: push falhou para", entity.entity_id, "-", err)
             if kind == "connection" then
-                -- HA unreachable / network dropped: stop early instead of
-                -- blocking the UI thread on N sequential request timeouts.
                 break
             end
         end
