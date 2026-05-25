@@ -35,7 +35,8 @@ end
 
 -- Posts one entity state. Returns ok(boolean), error(string|nil), kind(string|nil).
 function HAClient.post(cfg, entity)
-    local http = require("socket.http")
+    -- Plain HTTP uses LuaSocket; HTTPS needs LuaSec (socket.http cannot do TLS).
+    local http = cfg.https == true and require("ssl.https") or require("socket.http")
     local ltn12 = require("ltn12")
     local rapidjson = require("rapidjson")
 
