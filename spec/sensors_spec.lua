@@ -57,4 +57,35 @@ describe("Sensors.build", function()
         assert.are.equal("35", find(e, "sensor.koreader_reading_time_today").state)
         assert.are.equal("68", find(e, "sensor.koreader_reading_speed").state)
     end)
+
+    it("emits the extended reading + device sensors when present", function()
+        local snap = {
+            reading = true,
+            pages_left = 209, pages_left_chapter = 12,
+            time_to_finish_book_min = 140, time_to_finish_chapter_min = 8,
+            book_series = "Foundation", book_format = "EPUB", book_language = "en",
+            total_time_min = 320, annotations_count = 7,
+            warmth = 25, frontlight_on = true,
+        }
+        local e = Sensors.build(snap, {})
+        assert.are.equal("209", find(e, "sensor.koreader_pages_left").state)
+        assert.are.equal("12", find(e, "sensor.koreader_pages_left_in_chapter").state)
+        assert.are.equal("140", find(e, "sensor.koreader_time_to_finish_book").state)
+        assert.are.equal("8", find(e, "sensor.koreader_time_to_finish_chapter").state)
+        assert.are.equal("Foundation", find(e, "sensor.koreader_book_series").state)
+        assert.are.equal("EPUB", find(e, "sensor.koreader_book_format").state)
+        assert.are.equal("en", find(e, "sensor.koreader_book_language").state)
+        assert.are.equal("320", find(e, "sensor.koreader_total_reading_time").state)
+        assert.are.equal("7", find(e, "sensor.koreader_annotations").state)
+        assert.are.equal("25", find(e, "sensor.koreader_warmth").state)
+        assert.are.equal("on", find(e, "binary_sensor.koreader_frontlight_on").state)
+    end)
+
+    it("omits the extended sensors when their values are nil", function()
+        local e = Sensors.build({ reading = true }, {})
+        assert.is_nil(find(e, "sensor.koreader_pages_left"))
+        assert.is_nil(find(e, "sensor.koreader_total_reading_time"))
+        assert.is_nil(find(e, "sensor.koreader_annotations"))
+        assert.is_nil(find(e, "binary_sensor.koreader_frontlight_on"))
+    end)
 end)

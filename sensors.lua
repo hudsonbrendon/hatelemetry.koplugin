@@ -81,6 +81,43 @@ function Sensors.build(snapshot, opts)
     value_sensor("reading_speed", snapshot.reading_speed_pph, {
         friendly_name = "KOReader Reading Speed", icon = "mdi:speedometer",
         unit_of_measurement = "pages/h", state_class = "measurement" })
+    value_sensor("pages_left", snapshot.pages_left, {
+        friendly_name = "KOReader Pages Left", icon = "mdi:book-arrow-right-outline",
+        state_class = "measurement" })
+    value_sensor("pages_left_in_chapter", snapshot.pages_left_chapter, {
+        friendly_name = "KOReader Pages Left In Chapter",
+        icon = "mdi:book-arrow-right-outline", state_class = "measurement" })
+    value_sensor("time_to_finish_book", snapshot.time_to_finish_book_min, {
+        friendly_name = "KOReader Time To Finish Book", device_class = "duration",
+        unit_of_measurement = "min", state_class = "measurement" })
+    value_sensor("time_to_finish_chapter", snapshot.time_to_finish_chapter_min, {
+        friendly_name = "KOReader Time To Finish Chapter", device_class = "duration",
+        unit_of_measurement = "min", state_class = "measurement" })
+    value_sensor("book_series", snapshot.book_series, {
+        friendly_name = "KOReader Book Series", icon = "mdi:bookshelf" })
+    value_sensor("book_format", snapshot.book_format, {
+        friendly_name = "KOReader Book Format", icon = "mdi:file-document-outline" })
+    value_sensor("book_language", snapshot.book_language, {
+        friendly_name = "KOReader Book Language", icon = "mdi:translate" })
+    value_sensor("total_reading_time", snapshot.total_time_min, {
+        friendly_name = "KOReader Total Reading Time", device_class = "duration",
+        unit_of_measurement = "min", state_class = "total_increasing" })
+    value_sensor("annotations", snapshot.annotations_count, {
+        friendly_name = "KOReader Annotations", icon = "mdi:marker",
+        state_class = "measurement" })
+    value_sensor("warmth", snapshot.warmth, {
+        friendly_name = "KOReader Warmth", icon = "mdi:weather-sunny",
+        unit_of_measurement = "%", state_class = "measurement" })
+
+    -- Device-level boolean: frontlight on/off, emitted only when known
+    if snapshot.frontlight_on ~= nil then
+        out[#out + 1] = {
+            entity_id = entity("binary_sensor", "frontlight_on"),
+            state = snapshot.frontlight_on and "on" or "off",
+            attributes = {
+                friendly_name = "KOReader Frontlight On", icon = "mdi:lightbulb-on" },
+        }
+    end
 
     return out
 end
