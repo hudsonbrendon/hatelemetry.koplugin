@@ -1,0 +1,45 @@
+# Paste into Settings → Automations (YAML mode), or append to automations.yaml.
+
+# Turn on the reading lamp when you start reading after dark.
+- alias: "KOReader: reading lamp on when reading starts"
+  trigger:
+    - platform: state
+      entity_id: binary_sensor.koreader_status
+      from: "off"
+      to: "on"
+  condition:
+    - condition: state
+      entity_id: sun.sun
+      state: below_horizon
+  action:
+    - service: light.turn_on
+      target:
+        entity_id: light.reading_lamp
+
+# Turn the lamp off when you stop reading (sleep).
+- alias: "KOReader: reading lamp off when reading stops"
+  trigger:
+    - platform: state
+      entity_id: binary_sensor.koreader_status
+      from: "on"
+      to: "off"
+  action:
+    - service: light.turn_off
+      target:
+        entity_id: light.reading_lamp
+
+# Notify when the Kindle battery is low and not charging.
+- alias: "KOReader: low battery alert"
+  trigger:
+    - platform: numeric_state
+      entity_id: sensor.koreader_battery
+      below: 15
+  condition:
+    - condition: state
+      entity_id: binary_sensor.koreader_charging
+      state: "off"
+  action:
+    - service: notify.notify
+      data:
+        title: "Kindle battery low"
+        message: "Kindle at {{ states('sensor.koreader_battery') }}% — plug it in."

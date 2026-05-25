@@ -1,0 +1,61 @@
+# Add as a new manual dashboard, or paste cards into an existing view.
+# Replace the `koreader` prefix if you changed the entity prefix.
+title: Kindle
+views:
+  - title: Kindle
+    cards:
+      - type: entities
+        title: KOReader
+        entities:
+          - entity: binary_sensor.koreader_status
+            name: Reading
+          - entity: sensor.koreader_book_title
+            name: Book
+          - entity: sensor.koreader_book_author
+            name: Author
+          - entity: sensor.koreader_chapter
+            name: Chapter
+          - entity: sensor.koreader_current_page
+            name: Page
+          - entity: sensor.koreader_total_pages
+            name: Total pages
+          - entity: binary_sensor.koreader_charging
+            name: Charging
+          - entity: binary_sensor.koreader_wifi
+            name: WiFi
+
+      - type: gauge
+        entity: sensor.koreader_progress
+        name: Progress
+        unit: "%"
+        min: 0
+        max: 100
+        severity:
+          green: 66
+          yellow: 33
+          red: 0
+
+      - type: gauge
+        entity: sensor.koreader_battery
+        name: Battery
+        unit: "%"
+        min: 0
+        max: 100
+        severity:
+          green: 40
+          yellow: 20
+          red: 0
+
+      - type: history-graph
+        title: Reading over time
+        hours_to_show: 168
+        entities:
+          - entity: sensor.koreader_reading_time_today
+          - entity: sensor.koreader_pages_today
+          - entity: sensor.koreader_reading_speed
+
+      - type: history-graph
+        title: Reading sessions
+        hours_to_show: 72
+        entities:
+          - entity: binary_sensor.koreader_status
