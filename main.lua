@@ -18,6 +18,9 @@ local HAClient = require("ha_client")
 local HAWebhook = require("ha_webhook")
 local Commands = require("commands")
 
+-- KOReader version module (guarded: keeps the plugin loadable if it is ever absent).
+local ok_ver, Version = pcall(require, "version")
+
 -- Prefer a local debug config during development; fall back to ha_config.lua.
 local ok, ha_config = pcall(require, "ha_debug_config")
 if not ok then
@@ -73,12 +76,18 @@ end
 --- Build a telemetry snapshot from current runtime state.
 -- reading_override: force the "reading" flag (e.g. false on suspend).
 function HATelemetry:collect(reading_override)
+    local koreader_version
+    if ok_ver and Version then
+        local ok_v, v = pcall(function() return Version:getCurrentRevision() end)
+        if ok_v and v then koreader_version = tostring(v) end
+    end
     local snap = Snapshot.collect{
         device = Device,
         powerd = powerd,
         network = NetworkMgr,
         ui = self.ui,
         cur_page = self.cur_page,
+        koreader_version = koreader_version,
     }
     if reading_override ~= nil then
         snap.reading = reading_override
@@ -110,6 +119,35 @@ function HATelemetry:commandDeps()
         end,
         refresh = function()
             UIManager:setDirty("all", "full")
+        end,
+        goto_chapter = function(rel)
+            local ui = self.ui
+            if not ui or not ui.toc then return end
+            local cur = self.cur_page
+            if cur == nil and ui.view and ui.view.state then cur = ui.view.state.page end
+            if not cur then return end
+            local target
+            if rel >= 0 then
+                target = ui.toc:getNextChapter(cur)
+            else
+                target = ui.toc:getPreviousChapter(cur)
+            end
+            if target then ui:handleEvent(Event:new("GotoPage", target)) end
+        end,
+        toggle_bookmark = function()
+            if self.ui then self.ui:handleEvent(Event:new("ToggleBookmark")) end
+        end,
+        set_dark_mode = function(on)
+            local cur = G_reader_settings:isTrue("night_mode")
+            if on ~= cur then
+                UIManager:broadcastEvent(Event:new("ToggleNightMode"))
+            end
+        end,
+        suspend = function()
+            UIManager:suspend()
+        end,
+        restart = function()
+            UIManager:broadcastEvent(Event:new("Restart"))
         end,
     }
 end

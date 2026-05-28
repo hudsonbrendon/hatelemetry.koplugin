@@ -22,6 +22,11 @@ local function make_deps()
         turn_page = function(rel) calls.turn_page = rel end,
         goto_page = function(n) calls.goto_page = n end,
         refresh = function() calls.refresh = true end,
+        goto_chapter = function(rel) calls.goto_chapter = rel end,
+        toggle_bookmark = function() calls.toggle_bookmark = true end,
+        set_dark_mode = function(on) calls.dark_mode = on end,
+        suspend = function() calls.suspend = true end,
+        restart = function() calls.restart = true end,
     }
     return deps, calls
 end
@@ -111,5 +116,43 @@ describe("Commands.apply", function()
         local deps, calls = make_deps()
         Commands.apply({ type = "refresh" }, deps)
         assert.is_true(calls.refresh)
+    end)
+
+    it("goto_chapter passa o valor relativo", function()
+        local deps, calls = make_deps()
+        Commands.apply({ type = "goto_chapter", value = 1 }, deps)
+        assert.are.equal(1, calls.goto_chapter)
+        Commands.apply({ type = "goto_chapter", value = -1 }, deps)
+        assert.are.equal(-1, calls.goto_chapter)
+    end)
+
+    it("toggle_bookmark alterna o marcador", function()
+        local deps, calls = make_deps()
+        Commands.apply({ type = "toggle_bookmark" }, deps)
+        assert.is_true(calls.toggle_bookmark)
+    end)
+
+    it("set_dark_mode true liga o modo escuro", function()
+        local deps, calls = make_deps()
+        Commands.apply({ type = "set_dark_mode", value = true }, deps)
+        assert.is_true(calls.dark_mode)
+    end)
+
+    it("set_dark_mode false desliga o modo escuro", function()
+        local deps, calls = make_deps()
+        Commands.apply({ type = "set_dark_mode", value = false }, deps)
+        assert.is_false(calls.dark_mode)
+    end)
+
+    it("suspend coloca o dispositivo para dormir", function()
+        local deps, calls = make_deps()
+        Commands.apply({ type = "suspend" }, deps)
+        assert.is_true(calls.suspend)
+    end)
+
+    it("restart reinicia o KOReader", function()
+        local deps, calls = make_deps()
+        Commands.apply({ type = "restart" }, deps)
+        assert.is_true(calls.restart)
     end)
 end)

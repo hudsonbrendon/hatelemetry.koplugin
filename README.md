@@ -92,7 +92,10 @@ the plugin falls back to REST with `token`.
 | `pages_read_today` | Pages read today | `sensor.koreader_pages_read_today` |
 | `session_time_min` | Current session (min) | `sensor.koreader_session_time` |
 | `total_time_min` | Lifetime time for the book (min) | `sensor.koreader_total_reading_time` |
-| `annotations_count` | Highlights / notes | `sensor.koreader_annotations` |
+| `annotations_count` | Highlights / notes (combined) | `sensor.koreader_annotations` |
+| `highlights_count` | Highlights only | `sensor.koreader_highlights` |
+| `notes_count` | Notes only | `sensor.koreader_notes` |
+| `koreader_version` | KOReader revision | device `sw_version` |
 | `frontlight` | Frontlight level (%) | `sensor.koreader_frontlight` / `number.koreader_frontlight` |
 | `frontlight_on` | Frontlight on/off | `binary_sensor.koreader_frontlight_on` |
 | `warmth` | Frontlight warmth | `sensor.koreader_warmth` / `number.koreader_warmth` |
@@ -111,6 +114,11 @@ Commands returned by Home Assistant are applied on the next check-in:
 | `set_wifi` | Turn Wi-Fi on/off |
 | `page_turn` | Turn to next/previous page |
 | `goto_page` | Jump to a specific page |
+| `goto_chapter` | Jump to next/previous chapter |
+| `toggle_bookmark` | Bookmark the current page |
+| `set_dark_mode` | Toggle night mode |
+| `suspend` | Put the device to sleep |
+| `restart` | Restart KOReader |
 | `refresh` | Refresh the e-ink screen |
 | `sync_now` | Trigger a sync |
 

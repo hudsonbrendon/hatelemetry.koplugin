@@ -23,6 +23,9 @@ function Snapshot.collect(deps)
     local s = {}
     s.last_seen = now()
     s.device_model = device.model
+    if deps.koreader_version and deps.koreader_version ~= "" then
+        s.koreader_version = deps.koreader_version
+    end
 
     -- Power
     if device:hasBattery() then
@@ -141,10 +144,24 @@ function Snapshot.collect(deps)
             end
         end
 
-        -- Nº de anotações/destaques
+        -- Nº de anotações/destaques (total + separação highlights vs notas)
         if ui.annotation then
             local ok_an, n = pcall(function() return ui.annotation:getNumberOfHighlightsAndNotes() end)
             if ok_an and type(n) == "number" then s.annotations_count = n end
+
+            local anns = ui.annotation.annotations
+            if type(anns) == "table" then
+                local highlights, notes = 0, 0
+                for _, a in ipairs(anns) do
+                    if type(a) == "table" and a.note and a.note ~= "" then
+                        notes = notes + 1
+                    else
+                        highlights = highlights + 1
+                    end
+                end
+                s.highlights_count = highlights
+                s.notes_count = notes
+            end
         end
     end
 
