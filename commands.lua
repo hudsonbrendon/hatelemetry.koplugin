@@ -64,6 +64,22 @@ function Commands.apply(cmd, deps)
 
     elseif cmd.type == "refresh" then
         if deps.refresh then pcall(deps.refresh) end
+
+    elseif cmd.type == "goto_chapter" then
+        local rel = tonumber(cmd.value)
+        if rel and deps.goto_chapter then pcall(deps.goto_chapter, rel) end
+
+    elseif cmd.type == "toggle_bookmark" then
+        if deps.toggle_bookmark then pcall(deps.toggle_bookmark) end
+
+    elseif cmd.type == "set_dark_mode" then
+        if deps.set_dark_mode then pcall(deps.set_dark_mode, cmd.value == true) end
+
+    elseif cmd.type == "suspend" then
+        if deps.suspend then pcall(deps.suspend) end
+
+    elseif cmd.type == "restart" then
+        if deps.restart then pcall(deps.restart) end
     end
 end
 

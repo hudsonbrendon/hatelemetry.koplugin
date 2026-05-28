@@ -182,6 +182,39 @@ describe("Snapshot.collect", function()
         assert.are.equal(7, s.annotations_count)
     end)
 
+    it("captura koreader_version a partir das deps", function()
+        local s = Snapshot.collect{
+            device = fake_device(), powerd = fake_powerd{},
+            network = fake_network(true), ui = { document = nil },
+            koreader_version = "v2024.04",
+            now = function() return "T" end,
+        }
+        assert.are.equal("v2024.04", s.koreader_version)
+    end)
+
+    it("separa highlights_count e notes_count da lista de anotações", function()
+        local ui = {
+            document = { getPageCount = function() return 100 end },
+            doc_props = {},
+            annotation = {
+                getNumberOfHighlightsAndNotes = function() return 4 end,
+                annotations = {
+                    { page = 1 },
+                    { page = 2, note = "uma nota" },
+                    { page = 3 },
+                    { page = 4, note = "outra nota" },
+                },
+            },
+        }
+        local s = Snapshot.collect{
+            device = fake_device(), powerd = fake_powerd{},
+            network = fake_network(true), ui = ui, cur_page = 10,
+            now = function() return "T" end,
+        }
+        assert.are.equal(2, s.highlights_count)
+        assert.are.equal(2, s.notes_count)
+    end)
+
     it("reporta frontlight_on quando o dispositivo tem frontlight", function()
         local s = Snapshot.collect{
             device = fake_device{ has_frontlight = true },
